@@ -14,8 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Modern Video Player",
-  description: "Web-based local video player with File System Access API",
+  title: "CinemaStream | Your Local Media Hub",
+  description: "A professional web-based local video player using the File System Access API.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
