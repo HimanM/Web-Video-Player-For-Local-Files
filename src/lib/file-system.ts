@@ -45,9 +45,10 @@ export async function crawlDirectory(
           name: entry.name,
           handle: entry as FileSystemFileHandle,
           path: entryPath,
+          type: 'subtitle'
         };
         // We'll store subtitles separately in the state or just keep them in children for now
-        node.children.push({ ...subFile, type: 'subtitle' } as any);
+        node.children.push(subFile);
       }
     }
   }
@@ -68,7 +69,7 @@ export function getAllVideos(node: FolderNode): VideoFile[] {
   let videos: VideoFile[] = [];
   for (const child of node.children) {
     if ('children' in child) {
-      videos = [...videos, ...getAllVideos(child)];
+      videos = [...videos, ...getAllVideos(child as FolderNode)];
     } else if ('handle' in child && !('type' in child)) {
       videos.push(child as VideoFile);
     }
@@ -80,9 +81,9 @@ export function getAllSubtitles(node: FolderNode): SubtitleFile[] {
   let subs: SubtitleFile[] = [];
   for (const child of node.children) {
     if ('children' in child) {
-      subs = [...subs, ...getAllSubtitles(child)];
-    } else if ('type' in child && (child as any).type === 'subtitle') {
-      subs.push(child as any as SubtitleFile);
+      subs = [...subs, ...getAllSubtitles(child as FolderNode)];
+    } else if ('type' in child && child.type === 'subtitle') {
+      subs.push(child as SubtitleFile);
     }
   }
   return subs;

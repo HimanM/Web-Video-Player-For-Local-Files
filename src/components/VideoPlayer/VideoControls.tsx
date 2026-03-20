@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { VideoFile, SubtitleFile } from '@/types';
 import { cn, formatTime } from '@/lib/utils';
 import { 
@@ -14,9 +14,7 @@ import {
   Minimize,
   Captions,
   Settings,
-  MoreVertical,
   X,
-  Monitor,
   Layout
 } from 'lucide-react';
 
@@ -25,7 +23,6 @@ interface VideoControlsProps {
   currentVideo: VideoFile | null;
   isTheaterMode: boolean;
   showControls: boolean;
-  setShowControls: (show: boolean) => void;
   onToggleTheater: () => void;
   onNext: () => void;
   onPrev: () => void;
@@ -38,7 +35,6 @@ export default function VideoControls({
   currentVideo,
   isTheaterMode,
   showControls,
-  setShowControls,
   onToggleTheater,
   onNext,
   onPrev,

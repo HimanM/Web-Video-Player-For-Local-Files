@@ -8,8 +8,7 @@ import {
   ChevronDown, 
   Folder, 
   FileVideo, 
-  CheckCircle2, 
-  Clock 
+  CheckCircle2 
 } from 'lucide-react';
 
 interface FolderTreeProps {
@@ -64,7 +63,7 @@ export default function FolderTree({
       {/* Children */}
       {isExpanded && (
         <div className="mt-0.5">
-          {node.children.map((child, idx) => {
+          {node.children.map((child) => {
             if ('children' in child) {
               return (
                 <FolderTree 

@@ -9,13 +9,9 @@ import {
   ChevronRight, 
   Library,
   Settings,
-  MoreVertical,
   Sun,
   Moon,
   X,
-  PlayCircle,
-  Eye,
-  Settings2,
   RotateCcw,
   Trash2
 } from 'lucide-react';

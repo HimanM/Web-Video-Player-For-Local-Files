@@ -15,7 +15,6 @@ import {
   clearAllHistory
 } from '@/lib/storage-utils';
 import Sidebar from './Sidebar';
-import Playlist from './Playlist';
 import VideoControls from './VideoControls';
 import SubtitleSelector from './SubtitleSelector';
 import ConfirmationModal from './ConfirmationModal';
@@ -69,16 +68,29 @@ export default function VideoPlayer() {
   useEffect(() => {
     const lastState = getCurrentPlaybackState();
     if (lastState && lastState.currentFolderPath) {
-      setIsResumable(lastState);
+      setTimeout(() => {
+        setIsResumable(lastState);
+        setIsLoaded(true);
+      }, 0);
+    } else {
+      setTimeout(() => {
+        setIsLoaded(true);
+      }, 0);
     }
-    setIsLoaded(true);
   }, []);
 
   useEffect(() => {
     if (state.currentVideo) {
-      triggerFloatingInfo(5000);
+      // Use a small timeout or microtask to avoid synchronous setState in effect error if needed, 
+      // but let's see if wrapping it in a conditional or something else helps.
+      // Actually, the error says "Calling setState synchronously within an effect body".
+      // We can use a timeout to make it asynchronous.
+      const timer = setTimeout(() => {
+        triggerFloatingInfo(5000);
+      }, 0);
+      return () => clearTimeout(timer);
     }
-  }, [state.currentVideo?.path, triggerFloatingInfo]);
+  }, [state.currentVideo, triggerFloatingInfo]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -139,8 +151,8 @@ export default function VideoPlayer() {
         }
       }
       setIsResumable(null);
-    } catch (err: any) {
-      if (err.name === 'AbortError') return;
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') return;
       console.error('Failed to open directory', err);
     }
   };
@@ -335,7 +347,6 @@ export default function VideoPlayer() {
                 currentVideo={state.currentVideo}
                 isTheaterMode={isTheaterMode}
                 showControls={showControls}
-                setShowControls={setShowControls}
                 onToggleTheater={() => {
                   setIsTheaterMode(!isTheaterMode);
                   if (!isTheaterMode) triggerFloatingInfo(4000);

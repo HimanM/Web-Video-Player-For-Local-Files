@@ -13,7 +13,7 @@ export interface FolderNode {
   name: string;
   handle: FileSystemDirectoryHandle;
   path: string;
-  children: (FolderNode | VideoFile)[];
+  children: (FolderNode | VideoFile | SubtitleFile)[];
   videoCount: number;
 }
 
@@ -21,6 +21,7 @@ export interface SubtitleFile {
   name: string;
   handle: FileSystemFileHandle;
   path: string;
+  type?: 'subtitle';
   similarity?: number;
 }
 
@@ -38,7 +39,6 @@ export interface AppState {
   subtitles: SubtitleFile[];
   selectedSubtitle: SubtitleFile | null;
   isSidebarOpen: boolean;
-  theme: 'dark' | 'light';
   autoPlay: boolean;
   showWatched: boolean;
 }
