@@ -15,12 +15,18 @@ import {
   Captions,
   Settings,
   MoreVertical,
-  X
+  X,
+  Monitor,
+  Layout
 } from 'lucide-react';
 
 interface VideoControlsProps {
   videoRef: React.RefObject<HTMLVideoElement>;
   currentVideo: VideoFile | null;
+  isTheaterMode: boolean;
+  showControls: boolean;
+  setShowControls: (show: boolean) => void;
+  onToggleTheater: () => void;
   onNext: () => void;
   onPrev: () => void;
   onToggleSubtitles: () => void;
@@ -30,6 +36,10 @@ interface VideoControlsProps {
 export default function VideoControls({
   videoRef,
   currentVideo,
+  isTheaterMode,
+  showControls,
+  setShowControls,
+  onToggleTheater,
   onNext,
   onPrev,
   onToggleSubtitles,
@@ -41,8 +51,7 @@ export default function VideoControls({
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showControls, setShowControls] = useState(true);
-  const controlsTimer = useRef<NodeJS.Timeout | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   const togglePlay = useCallback(() => {
     if (!videoRef.current) return;
@@ -68,8 +77,6 @@ export default function VideoControls({
     setVolume(val);
     setIsMuted(val === 0);
   };
-
-  const [showSettings, setShowSettings] = useState(false);
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseFloat(e.target.value);
@@ -118,19 +125,13 @@ export default function VideoControls({
     };
   }, [videoRef]);
 
-  const resetControlsTimer = useCallback(() => {
-    setShowControls(true);
-    if (controlsTimer.current) clearTimeout(controlsTimer.current);
-    controlsTimer.current = setTimeout(() => {
-      if (isPlaying && !showSettings) setShowControls(false);
-    }, 3000);
-  }, [isPlaying, showSettings]);
-
   useEffect(() => {
-    const handleGlobalMouseMove = () => resetControlsTimer();
-    window.addEventListener('mousemove', handleGlobalMouseMove);
-    return () => window.removeEventListener('mousemove', handleGlobalMouseMove);
-  }, [resetControlsTimer]);
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   return (
     <div 
@@ -138,23 +139,13 @@ export default function VideoControls({
         "absolute inset-x-0 bottom-0 z-10 transition-all duration-500",
         showControls ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"
       )}
-      onMouseEnter={() => {
-        setShowControls(true);
-        if (controlsTimer.current) clearTimeout(controlsTimer.current);
-      }}
-      onMouseLeave={() => {
-        if (isPlaying) {
-          setShowControls(false);
-          setShowSettings(false);
-        }
-      }}
     >
       {/* Settings Menu */}
       {showSettings && (
-        <div className="absolute bottom-24 right-6 w-64 bg-card/90 backdrop-blur-xl border border-border rounded-2xl p-4 shadow-2xl animate-in slide-in-from-bottom-4 duration-200 text-foreground">
+        <div className="absolute bottom-24 right-6 w-64 bg-card/90 backdrop-blur-xl border border-border rounded-2xl p-4 shadow-2xl animate-in slide-in-from-bottom-4 duration-200 text-foreground pointer-events-auto">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Settings</h3>
-            <button onClick={() => setShowSettings(false)} className="p-1 hover:bg-accent rounded-lg transition-colors">
+            <button onClick={(e) => { e.stopPropagation(); setShowSettings(false); }} className="p-1 hover:bg-accent rounded-lg transition-colors text-foreground">
                <X size={16} />
             </button>
           </div>
@@ -177,7 +168,7 @@ export default function VideoControls({
               </select>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Auto-play next</span>
+              <span className="text-sm font-medium text-foreground">Auto-play next</span>
               <input type="checkbox" defaultChecked className="accent-blue-500 w-4 h-4" />
             </div>
           </div>
@@ -187,7 +178,7 @@ export default function VideoControls({
       {/* Gradient Overlay - Much stronger for visibility */}
       <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black/95 via-black/70 to-transparent -z-10 dark:from-black dark:via-black/80" />
 
-      <div className="px-6 pb-8 space-y-6">
+      <div className="px-6 pb-8 space-y-6 pointer-events-auto">
         {/* Progress Bar & Time Display */}
         <div className="flex items-center gap-6 group/progress bg-black/40 backdrop-blur-md p-3 rounded-2xl border border-white/10">
           <div className="text-sm font-bold font-mono text-white min-w-[60px] text-right tabular-nums">
@@ -239,11 +230,13 @@ export default function VideoControls({
               />
             </div>
             
-            <div className="hidden md:block ml-4">
-               <h2 className="text-sm font-semibold truncate max-w-[200px] lg:max-w-[400px]">
-                 {currentVideo?.name}
-               </h2>
-            </div>
+            {!isTheaterMode && (
+              <div className="hidden xl:block ml-4">
+                 <h2 className="text-sm font-semibold truncate max-w-[200px] text-white/90">
+                   {currentVideo?.name}
+                 </h2>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-4">
@@ -257,21 +250,29 @@ export default function VideoControls({
               )}
             >
               <Captions size={16} />
-              <span className="hidden sm:inline">
+              <span className="hidden sm:inline text-white/90">
                 {selectedSubtitle ? selectedSubtitle.name.split('.').pop()?.toUpperCase() : 'Subtitles'}
               </span>
             </button>
+
+            <button 
+              onClick={(e) => { e.stopPropagation(); onToggleTheater(); }}
+              className={cn("text-zinc-400 hover:text-white transition-colors p-1 rounded-md", isTheaterMode && "text-primary bg-primary/10")}
+              title={isTheaterMode ? "Default View" : "Theater Mode"}
+            >
+              <Layout size={20} />
+            </button>
             
             <button 
-              onClick={() => setShowSettings(!showSettings)}
-              className={cn("text-zinc-400 hover:text-white transition-colors", showSettings && "text-blue-400")}
+              onClick={(e) => { e.stopPropagation(); setShowSettings(!showSettings); }}
+              className={cn("text-zinc-400 hover:text-white transition-colors p-1 rounded-md", showSettings && "text-blue-400")}
             >
               <Settings size={20} />
             </button>
             
             <button 
               onClick={toggleFullscreen}
-              className="text-zinc-400 hover:text-white transition-colors"
+              className="text-zinc-400 hover:text-white transition-colors p-1 rounded-md"
             >
               {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
             </button>
