@@ -1,5 +1,5 @@
 {
-  "name": "temp-app",
+  "name": "cinemastream",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -23,6 +23,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/wicg-file-system-access": "^2023.10.7",
     "eslint": "^9",
     "eslint-config-next": "16.2.0",
     "tailwindcss": "^4",
