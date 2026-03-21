@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 interface VideoControlsProps {
-  videoRef: React.RefObject<HTMLVideoElement>;
+  videoRef: React.RefObject<HTMLVideoElement | null>;
   currentVideo: VideoFile | null;
   isTheaterMode: boolean;
   showControls: boolean;

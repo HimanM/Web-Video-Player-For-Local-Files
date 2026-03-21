@@ -1,3 +1,5 @@
+import { SubtitleFile } from "@/types";
+
 export function calculateSimilarity(s1: string, s2: string): number {
   const words1 = s1.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean);
   const words2 = s2.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean);
@@ -16,11 +18,11 @@ export function calculateSimilarity(s1: string, s2: string): number {
   return intersection / union;
 }
 
-export function findBestSubtitle(videoName: string, subtitleFiles: { name: string }[]) {
+export function findBestSubtitle(videoName: string, subtitleFiles: SubtitleFile[]): { bestSubtitle: SubtitleFile | null; score: number } {
   const baseVideoName = videoName.replace(/\.[^/.]+$/, ""); // Remove extension
   
   let bestScore = -1;
-  let bestSubtitle = null;
+  let bestSubtitle: SubtitleFile | null = null;
 
   for (const sub of subtitleFiles) {
     const baseSubName = sub.name.replace(/\.[^/.]+$/, "");
