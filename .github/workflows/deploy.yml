@@ -4,9 +4,6 @@ on:
   # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
-    paths:
-      - 'src/**'
-      - 'index.html'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -52,8 +49,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload the dist folder where Vite builds the static files
-          path: './dist'
+          # Upload the out folder where Next.js builds the static files
+          path: './out'
           
       - name: Deploy to GitHub Pages
         id: deployment
