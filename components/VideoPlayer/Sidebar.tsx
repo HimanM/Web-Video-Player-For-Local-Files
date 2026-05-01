@@ -62,35 +62,45 @@ export default function Sidebar({
                <X size={14} />
             </button>
           </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Theme</span>
-              <button 
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-lg text-xs font-medium border border-border"
-              >
-                {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-                {theme === 'dark' ? 'Light' : 'Dark'}
-              </button>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <span className="text-sm font-medium text-foreground">Appearance</span>
+              <div className="flex bg-muted p-1 rounded-lg border border-border">
+                <button 
+                  onClick={() => setTheme('light')}
+                  className={cn("flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs font-medium transition-all", theme === 'light' ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}
+                >
+                  <Sun size={14} /> Light
+                </button>
+                <button 
+                  onClick={() => setTheme('dark')}
+                  className={cn("flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs font-medium transition-all", theme === 'dark' ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}
+                >
+                  <Moon size={14} /> Dark
+                </button>
+              </div>
             </div>
             
-            <div className="h-px bg-border my-1" />
+            <div className="h-px bg-border" />
             
-            <button 
-              onClick={() => { onRemoveFolder(); setShowSettings(false); }}
-              className="flex items-center gap-3 w-full px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-xl transition-colors font-semibold"
-            >
-              <Trash2 size={16} />
-              Remove Folder
-            </button>
-            
-            <button 
-              onClick={() => { onClearHistory(); setShowSettings(false); }}
-              className="flex items-center gap-3 w-full px-3 py-2 text-sm text-amber-500 hover:bg-amber-500/10 rounded-xl transition-colors font-semibold"
-            >
-              <RotateCcw size={16} />
-              Clear History
-            </button>
+            <div className="space-y-2">
+              <span className="text-sm font-medium text-foreground">Data Management</span>
+              <button 
+                onClick={() => { onRemoveFolder(); setShowSettings(false); }}
+                className="flex items-center gap-3 w-full px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-xl transition-colors font-semibold"
+              >
+                <Trash2 size={16} />
+                Remove Folder
+              </button>
+              
+              <button 
+                onClick={() => { onClearHistory(); setShowSettings(false); }}
+                className="flex items-center gap-3 w-full px-3 py-2 text-sm text-amber-500 hover:bg-amber-500/10 rounded-xl transition-colors font-semibold"
+              >
+                <RotateCcw size={16} />
+                Clear History
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -124,12 +134,6 @@ export default function Sidebar({
           </button>
           <button onClick={onOpenFolder} className="p-2 hover:bg-muted rounded-xl transition-colors">
             <FolderOpen size={20} />
-          </button>
-          <button 
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground"
-          >
-            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
           <button 
             onClick={() => setShowSettings(!showSettings)}
@@ -203,13 +207,6 @@ export default function Sidebar({
 
           {/* Footer */}
           <div className="p-4 border-t border-border flex items-center justify-between text-muted-foreground">
-             <button 
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="p-1.5 hover:bg-muted rounded-lg transition-colors"
-                title="Toggle Theme"
-             >
-                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-             </button>
              <div className="text-[10px] font-medium tracking-widest uppercase opacity-30">
                 v1.2.0
              </div>

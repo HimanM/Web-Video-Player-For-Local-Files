@@ -137,6 +137,31 @@ export default function VideoPlayer() {
     };
   }, [triggerFloatingInfo, resetControlsTimer]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input, textarea, or select
+      if (document.activeElement?.tagName === 'INPUT' || 
+          document.activeElement?.tagName === 'TEXTAREA' || 
+          document.activeElement?.tagName === 'SELECT') {
+        return;
+      }
+      
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (videoRef.current) {
+          if (videoRef.current.paused) {
+            videoRef.current.play();
+          } else {
+            videoRef.current.pause();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const handleOpenFolder = async () => {
     try {
       const handle = await (window as any).showDirectoryPicker();

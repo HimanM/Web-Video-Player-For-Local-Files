@@ -138,7 +138,7 @@ export default function VideoControls({
     >
       {/* Settings Menu */}
       {showSettings && (
-        <div className="absolute bottom-24 right-6 w-64 bg-card/90 backdrop-blur-xl border border-border rounded-2xl p-4 shadow-2xl animate-in slide-in-from-bottom-4 duration-200 text-foreground pointer-events-auto">
+        <div className="absolute bottom-24 right-6 z-50 w-64 bg-card/90 backdrop-blur-xl border border-border rounded-2xl p-4 shadow-2xl animate-in slide-in-from-bottom-4 duration-200 text-foreground pointer-events-auto">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Settings</h3>
             <button onClick={(e) => { e.stopPropagation(); setShowSettings(false); }} className="p-1 hover:bg-accent rounded-lg transition-colors text-foreground">
@@ -171,8 +171,8 @@ export default function VideoControls({
         </div>
       )}
 
-      {/* Gradient Overlay - Much stronger for visibility */}
-      <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black/95 via-black/70 to-transparent -z-10 dark:from-black dark:via-black/80" />
+      {/* Gradient Overlay - Apple Hyperglass Theme */}
+      <div className="absolute inset-x-0 bottom-0 h-40 bg-white/10 dark:bg-black/20 backdrop-blur-2xl border-t border-white/20 dark:border-white/10 -z-10" />
 
       <div className="px-6 pb-8 space-y-6 pointer-events-auto">
         {/* Progress Bar & Time Display */}

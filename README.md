@@ -87,7 +87,7 @@ This project includes a multi stage Dockerfile optimized for minimal image size 
    ```
 2. Run the container:
    ```bash
-   docker run -p 3000:3000 cinemastream
+   docker run --name cinemastream_app -p 3000:3000 cinemastream
    ```
 
 ## Project Structure
