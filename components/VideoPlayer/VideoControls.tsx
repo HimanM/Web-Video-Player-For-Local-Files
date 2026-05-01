@@ -146,24 +146,26 @@ export default function VideoControls({
   return (
     <div 
       className={cn(
-        "absolute inset-x-0 bottom-0 z-10 transition-all duration-500",
-        showControls ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"
+        "absolute inset-x-4 md:inset-x-8 max-w-4xl mx-auto bottom-6 md:bottom-8 z-10 transition-all duration-300 ease-out",
+        showControls ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-8 scale-[0.98] pointer-events-none"
       )}
     >
+      <div className="bg-white/20 dark:bg-black/30 backdrop-blur-3xl border border-white/40 dark:border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] rounded-3xl p-4 md:p-5 pointer-events-auto flex flex-col gap-3 relative">
+      
       {/* Settings Menu */}
       {showSettings && (
-        <div className="absolute bottom-24 right-6 z-50 w-64 bg-card/90 backdrop-blur-xl border border-border rounded-2xl p-4 shadow-2xl animate-in slide-in-from-bottom-4 duration-200 text-foreground pointer-events-auto">
+        <div className="absolute bottom-[calc(100%+16px)] right-0 z-50 w-64 bg-white/20 dark:bg-black/30 backdrop-blur-3xl border border-white/40 dark:border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_0_20px_rgba(255,255,255,0.05)] rounded-2xl p-4 animate-in fade-in zoom-in-95 duration-200 text-black dark:text-white">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Settings</h3>
-            <button onClick={(e) => { e.stopPropagation(); setShowSettings(false); }} className="p-1 hover:bg-accent rounded-lg transition-colors text-foreground">
-               <X size={16} />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60">Settings</h3>
+            <button onClick={(e) => { e.stopPropagation(); setShowSettings(false); }} className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-lg transition-colors">
+               <X size={14} />
             </button>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Playback Speed</span>
               <select 
-                className="bg-muted border border-border rounded px-2 py-1 text-xs outline-none text-foreground"
+                className="bg-white dark:bg-black border border-black/10 dark:border-white/10 rounded-lg px-2 py-1 text-xs outline-none font-medium shadow-sm transition-colors cursor-pointer"
                 value={playbackSpeed}
                 onChange={(e) => {
                   const val = parseFloat(e.target.value);
@@ -180,33 +182,29 @@ export default function VideoControls({
               </select>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-foreground">Auto-play next</span>
-              <input type="checkbox" defaultChecked className="accent-blue-500 w-4 h-4" />
+              <span className="text-sm font-medium">Auto-play next</span>
+              <input type="checkbox" defaultChecked className="accent-blue-500 w-4 h-4 rounded cursor-pointer" />
             </div>
           </div>
         </div>
       )}
 
-      {/* Gradient Overlay - Apple Hyperglass Theme */}
-      <div className="absolute inset-x-0 bottom-0 h-40 bg-white/10 dark:bg-black/20 backdrop-blur-2xl border-t border-white/20 dark:border-white/10 -z-10" />
-
-      <div className="px-6 pb-8 space-y-6 pointer-events-auto">
         {/* Progress Bar & Time Display */}
-        <div className="flex items-center gap-6 group/progress bg-black/40 backdrop-blur-md p-3 rounded-2xl border border-white/10">
-          <div className="text-sm font-bold font-mono text-white min-w-[60px] text-right tabular-nums">
+        <div className="flex items-center gap-4 px-2">
+          <div className="text-xs font-bold font-mono text-black/80 dark:text-white/90 min-w-[50px] text-right tabular-nums">
             {formatTime(currentTime)}
           </div>
-          <div className="flex-1 relative flex items-center">
+          <div className="flex-1 relative flex items-center group/scrubber h-6 cursor-pointer">
             <input 
               type="range"
               min={0}
               max={duration || 100}
               value={currentTime}
               onChange={handleSeek}
-              className="w-full h-2 bg-white/30 rounded-full appearance-none cursor-pointer accent-blue-500 hover:h-3 transition-all"
+              className="w-full h-1.5 bg-black/10 dark:bg-white/20 rounded-full appearance-none cursor-pointer accent-black dark:accent-white hover:h-2 transition-all relative z-10"
             />
           </div>
-          <div className="text-sm font-bold font-mono text-white min-w-[60px] tabular-nums">
+          <div className="text-xs font-bold font-mono text-black/80 dark:text-white/90 min-w-[50px] tabular-nums">
             {formatTime(duration)}
           </div>
         </div>
@@ -214,21 +212,21 @@ export default function VideoControls({
         {/* Controls Row */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <button onClick={onPrev} className="text-zinc-400 hover:text-white transition-colors">
+            <button onClick={onPrev} className="text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors">
               <SkipBack size={24} fill="currentColor" />
             </button>
             <button 
               onClick={togglePlay}
-              className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-xl"
+              className="w-12 h-12 bg-black dark:bg-white text-white dark:text-black rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-xl"
             >
               {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} className="ml-1" fill="currentColor" />}
             </button>
-            <button onClick={onNext} className="text-zinc-400 hover:text-white transition-colors">
+            <button onClick={onNext} className="text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors">
               <SkipForward size={24} fill="currentColor" />
             </button>
             
             <div className="flex items-center gap-3 group/volume ml-4">
-              <button onClick={toggleMute} className="text-zinc-400 hover:text-white transition-colors">
+              <button onClick={toggleMute} className="text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors">
                 {isMuted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
               </button>
               <input 
@@ -238,13 +236,13 @@ export default function VideoControls({
                 step={0.05}
                 value={isMuted ? 0 : volume}
                 onChange={handleVolumeChange}
-                className="w-0 group-hover/volume:w-24 h-1 bg-white/20 rounded-full appearance-none cursor-pointer accent-white transition-all opacity-0 group-hover/volume:opacity-100"
+                className="w-0 group-hover/volume:w-24 h-1 bg-black/10 dark:bg-white/20 rounded-full appearance-none cursor-pointer accent-black dark:accent-white transition-all opacity-0 group-hover/volume:opacity-100"
               />
             </div>
             
             {!isTheaterMode && (
               <div className="hidden xl:block ml-4">
-                 <h2 className="text-sm font-semibold truncate max-w-[200px] text-white/90">
+                 <h2 className="text-sm font-semibold truncate max-w-[200px] text-black/90 dark:text-white/90">
                    {currentVideo?.name}
                  </h2>
               </div>
@@ -257,19 +255,19 @@ export default function VideoControls({
               className={cn(
                 "flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all text-xs font-medium",
                 selectedSubtitle 
-                  ? "bg-blue-600/20 border-blue-500/30 text-blue-400" 
-                  : "bg-zinc-900/50 border-white/5 text-zinc-400 hover:bg-zinc-800"
+                  ? "bg-blue-500/20 border-blue-500/30 text-blue-600 dark:text-blue-400" 
+                  : "bg-black/5 dark:bg-white/10 border-black/10 dark:border-white/10 text-black/70 dark:text-white/70 hover:bg-black/10 dark:hover:bg-white/20 hover:text-black dark:hover:text-white"
               )}
             >
               <Captions size={16} />
-              <span className="hidden sm:inline text-white/90">
+              <span className="hidden sm:inline">
                 {selectedSubtitle ? selectedSubtitle.name.split('.').pop()?.toUpperCase() : 'Subtitles'}
               </span>
             </button>
 
             <button 
               onClick={(e) => { e.stopPropagation(); onToggleTheater(); }}
-              className={cn("text-zinc-400 hover:text-white transition-colors p-1 rounded-md", isTheaterMode && "text-primary bg-primary/10")}
+              className={cn("text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors p-1 rounded-md", isTheaterMode && "text-blue-600 dark:text-blue-400")}
               title={isTheaterMode ? "Default View" : "Theater Mode"}
             >
               <Layout size={20} />
@@ -277,14 +275,14 @@ export default function VideoControls({
             
             <button 
               onClick={(e) => { e.stopPropagation(); setShowSettings(!showSettings); }}
-              className={cn("text-zinc-400 hover:text-white transition-colors p-1 rounded-md", showSettings && "text-blue-400")}
+              className={cn("text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors p-1 rounded-md", showSettings && "text-blue-600 dark:text-blue-400")}
             >
               <Settings size={20} />
             </button>
             
             <button 
               onClick={toggleFullscreen}
-              className="text-zinc-400 hover:text-white transition-colors p-1 rounded-md"
+              className="text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors p-1 rounded-md"
             >
               {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
             </button>

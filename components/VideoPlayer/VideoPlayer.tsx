@@ -52,9 +52,11 @@ export default function VideoPlayer() {
   const [isLoaded, setIsLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const trackRef = useRef<HTMLTrackElement>(null);
+  const [activeCues, setActiveCues] = useState<string[]>([]);
   const [showSubtitleModal, setShowSubtitleModal] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
   const [isTheaterMode, setIsTheaterMode] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [showFloatingInfo, setShowFloatingInfo] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const pendingSeekTime = useRef<number | null>(null);
@@ -108,7 +110,9 @@ export default function VideoPlayer() {
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      if (document.fullscreenElement) {
+      const isFs = !!document.fullscreenElement;
+      setIsFullscreen(isFs);
+      if (isFs) {
         triggerFloatingInfo(4000);
       }
     };
@@ -124,18 +128,15 @@ export default function VideoPlayer() {
       setShowFloatingInfo(false);
       resetControlsTimer();
 
-      // Workaround for stuck captions when resuming play
+      // Clean up old captions when resuming play
       if (video.textTracks && video.textTracks.length > 0) {
         for (let i = 0; i < video.textTracks.length; i++) {
           const track = video.textTracks[i];
-          if (trackRef.current && trackRef.current.track === track) {
-            track.mode = 'hidden';
-            track.mode = 'showing';
-          } else {
-            track.mode = 'hidden';
+          track.mode = 'hidden';
+          if (!trackRef.current || trackRef.current.track !== track) {
             if (track.cues) {
                try {
-                 Array.from(track.cues).forEach(cue => track.removeCue(cue));
+                 Array.from(track.cues).forEach(cue => track.removeCue(cue as VTTCue));
                } catch(e) {}
             }
           }
@@ -155,6 +156,48 @@ export default function VideoPlayer() {
       video.removeEventListener('pause', handlePause);
     };
   }, [triggerFloatingInfo, resetControlsTimer]);
+
+  // Track active subtitle cues for custom rendering
+  useEffect(() => {
+    if (!subtitleUrl) {
+      setActiveCues([]);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      if (trackRef.current && trackRef.current.track) {
+        const track = trackRef.current.track;
+        track.mode = 'hidden'; // Ensure it's parsing but natively hidden
+        
+        const handleCueChange = () => {
+          if (track.activeCues && track.activeCues.length > 0) {
+            const cues = Array.from(track.activeCues) as VTTCue[];
+            setActiveCues(cues.map(c => {
+              if (typeof c.getCueAsHTML === 'function') {
+                const fragment = c.getCueAsHTML();
+                const div = document.createElement('div');
+                div.appendChild(fragment.cloneNode(true));
+                return div.innerHTML;
+              }
+              return c.text;
+            }));
+          } else {
+            setActiveCues([]);
+          }
+        };
+
+        // If the listener isn't attached yet, attach it
+        if (!(track as any)._hasCueListener) {
+          track.addEventListener('cuechange', handleCueChange);
+          (track as any)._hasCueListener = true;
+          // Trigger once in case cues are already active
+          handleCueChange();
+        }
+      }
+    }, 500);
+
+    return () => clearInterval(timer);
+  }, [subtitleUrl]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -351,95 +394,168 @@ export default function VideoPlayer() {
       />
 
       <main className="flex-1 flex flex-col relative overflow-y-auto overflow-x-hidden custom-scrollbar bg-background">
+        <style dangerouslySetInnerHTML={{ __html: `
+          video::-webkit-media-text-track-display {
+            display: none !important;
+          }
+          ::cue {
+            color: transparent !important;
+            background: transparent !important;
+          }
+          .white { color: #ffffff; }
+          .lime { color: #a3e635; }
+          .cyan { color: #22d3ee; }
+          .red { color: #f87171; }
+          .yellow { color: #facc15; }
+          .magenta { color: #e879f9; }
+          .blue { color: #60a5fa; }
+          .green { color: #4ade80; }
+        `}} />
+        
         {state.currentVideo ? (
           <div className={cn(
             "flex flex-col w-full transition-all duration-500 ease-in-out h-full",
-            isTheaterMode ? "max-w-full" : "max-w-[1400px] mx-auto p-4 lg:p-6"
+            isTheaterMode ? "max-w-full p-2 sm:p-4 lg:p-8" : "max-w-[1400px] mx-auto p-4 lg:p-6"
           )}>
             <div 
               className={cn(
-                "relative bg-black shadow-2xl transition-all duration-500 ease-in-out group flex-shrink-0",
-                isTheaterMode ? "w-full h-[calc(100vh-120px)] min-h-[400px]" : "aspect-video w-full rounded-3xl overflow-hidden"
+                "relative bg-black shadow-2xl transition-all duration-500 ease-in-out group flex-shrink-0 flex flex-col rounded-3xl overflow-hidden",
+                isTheaterMode ? "w-full flex-1" : "aspect-video w-full"
               )}
               onMouseEnter={() => setShowControls(true)}
               onMouseLeave={() => setShowControls(false)}
               onMouseMove={resetControlsTimer}
             >
-              {/* Floating Info Overlay - Active in Theater Mode OR Fullscreen */}
-              {(isTheaterMode || (typeof document !== 'undefined' && !!document.fullscreenElement)) && (
-                <div className={cn(
-                  "absolute top-8 left-8 z-30 transition-all duration-500 pointer-events-none",
-                  showFloatingInfo ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
-                )}>
-                  <div className="bg-black/60 backdrop-blur-xl border border-white/10 p-5 rounded-2xl shadow-2xl max-w-md">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="bg-primary text-primary-foreground px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter shadow-sm">{state.currentVideo.extension}</span>
-                      <span className="text-[10px] text-white/40 uppercase font-bold tracking-widest">{state.currentVideo.watched ? "Watched" : "Now Playing"}</span>
+              {/* Main Video Area */}
+              <div className="flex-1 relative min-h-0 w-full flex flex-col">
+                {/* Floating Info Overlay - Active in Theater Mode OR Fullscreen */}
+                {(isTheaterMode || (typeof document !== 'undefined' && !!document.fullscreenElement)) && (
+                  <div className={cn(
+                    "absolute top-8 left-8 z-30 transition-all duration-500 pointer-events-none",
+                    showFloatingInfo ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"
+                  )}>
+                    <div className="bg-black/60 backdrop-blur-xl border border-white/10 p-5 rounded-2xl shadow-2xl max-w-md">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="bg-primary text-primary-foreground px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter shadow-sm">{state.currentVideo.extension}</span>
+                        <span className="text-[10px] text-white/40 uppercase font-bold tracking-widest">{state.currentVideo.watched ? "Watched" : "Now Playing"}</span>
+                      </div>
+                      <h2 className="text-xl font-bold text-white leading-tight mb-1 line-clamp-2">{state.currentVideo.name.replace(/\.[^/.]+$/, "")}</h2>
+                      <p className="text-[10px] text-white/30 font-mono truncate">{state.currentVideo.path}</p>
                     </div>
-                    <h2 className="text-xl font-bold text-white leading-tight mb-1 line-clamp-2">{state.currentVideo.name.replace(/\.[^/.]+$/, "")}</h2>
-                    <p className="text-[10px] text-white/30 font-mono truncate">{state.currentVideo.path}</p>
                   </div>
-                </div>
-              )}
+                )}
 
-              <video 
-                ref={(el) => {
-                  if (videoRef) {
-                    (videoRef as React.MutableRefObject<HTMLVideoElement | null>).current = el;
-                  }
-                  if (el) {
-                    // Force the track to show
-                    const tracks = el.textTracks;
-                    if (tracks && tracks.length > 0) {
-                      tracks[0].mode = 'showing';
+                <video 
+                  ref={(el) => {
+                    if (videoRef) {
+                      (videoRef as React.MutableRefObject<HTMLVideoElement | null>).current = el;
                     }
-                  }
-                }}
-                src={videoUrl || undefined}
-                className="w-full h-full object-contain"
-                onEnded={onVideoEnded}
-                onLoadedData={() => {
-                  if (pendingSeekTime.current !== null && videoRef.current) {
-                    videoRef.current.currentTime = pendingSeekTime.current;
-                    pendingSeekTime.current = null;
-                  }
-                  
-                  // Hide any ghost tracks that the browser didn't clean up
-                  if (videoRef.current && videoRef.current.textTracks) {
-                    const tracks = videoRef.current.textTracks;
-                    for (let i = 0; i < tracks.length; i++) {
-                      if (!trackRef.current || trackRef.current.track !== tracks[i]) {
-                        tracks[i].mode = 'hidden';
+                  }}
+                  src={videoUrl || undefined}
+                  className="w-full h-full object-contain"
+                  onEnded={onVideoEnded}
+                  onLoadedData={() => {
+                    if (pendingSeekTime.current !== null && videoRef.current) {
+                      videoRef.current.currentTime = pendingSeekTime.current;
+                      pendingSeekTime.current = null;
+                    }
+                    
+                    // Hide any ghost tracks that the browser didn't clean up
+                    if (videoRef.current && videoRef.current.textTracks) {
+                      const tracks = videoRef.current.textTracks;
+                      for (let i = 0; i < tracks.length; i++) {
+                        if (!trackRef.current || trackRef.current.track !== tracks[i]) {
+                          tracks[i].mode = 'hidden';
+                        }
                       }
                     }
-                  }
-                }}
-                controls={false}
-                autoPlay
-              >
-                {subtitleUrl && <track ref={trackRef} key={subtitleUrl} kind="subtitles" src={subtitleUrl} srcLang="en" label="English" default />}
-              </video>
-              
-              <VideoControls 
-                videoRef={videoRef}
-                currentVideo={state.currentVideo}
-                isTheaterMode={isTheaterMode}
-                showControls={showControls}
-                onToggleTheater={() => {
-                  setIsTheaterMode(!isTheaterMode);
-                  if (!isTheaterMode) triggerFloatingInfo(4000);
-                }}
-                onNext={onVideoEnded}
-                onPrev={() => {
-                  if (state.currentFolder) {
-                    const videos = getAllVideos(state.currentFolder);
-                    const currentIndex = videos.findIndex(v => v.path === state.currentVideo?.path);
-                    if (currentIndex > 0) playVideo(videos[currentIndex - 1]);
-                  }
-                }}
-                onToggleSubtitles={() => setShowSubtitleModal(true)}
-                selectedSubtitle={state.selectedSubtitle}
-              />
+                  }}
+                  controls={false}
+                  autoPlay
+                >
+                  {subtitleUrl && (
+                    <track 
+                      ref={trackRef} 
+                      key={subtitleUrl} 
+                      kind="subtitles" 
+                      src={subtitleUrl} 
+                      srcLang="en" 
+                      label="English" 
+                      default 
+                    />
+                  )}
+                </video>
+                
+                {/* Normal Mode Subtitles (Overlay) */}
+                {(!isTheaterMode || isFullscreen) && activeCues.length > 0 && subtitleUrl && (
+                  <div 
+                    className={cn(
+                      "absolute inset-x-0 flex flex-col items-center pointer-events-none z-20 transition-all duration-500 ease-out px-8",
+                      showControls ? "bottom-36 md:bottom-40" : "bottom-10 md:bottom-12"
+                    )}
+                  >
+                    {activeCues.map((text, i) => (
+                      <span 
+                        key={i} 
+                        className="px-5 py-2 rounded-xl text-center shadow-2xl whitespace-pre-wrap leading-snug tracking-wide"
+                        style={{
+                          fontSize: state.subtitleSettings.size,
+                          color: state.subtitleSettings.color,
+                          fontFamily: state.subtitleSettings.fontFamily,
+                          backgroundColor: state.subtitleSettings.backgroundColor
+                        }}
+                        dangerouslySetInnerHTML={{ __html: text }}
+                      />
+                    ))}
+                  </div>
+                )}
+                
+                <VideoControls 
+                  videoRef={videoRef}
+                  currentVideo={state.currentVideo}
+                  isTheaterMode={isTheaterMode}
+                  showControls={showControls}
+                  onToggleTheater={() => {
+                    setIsTheaterMode(!isTheaterMode);
+                    if (!isTheaterMode) triggerFloatingInfo(4000);
+                  }}
+                  onNext={onVideoEnded}
+                  onPrev={() => {
+                    if (state.currentFolder) {
+                      const videos = getAllVideos(state.currentFolder);
+                      const currentIndex = videos.findIndex(v => v.path === state.currentVideo?.path);
+                      if (currentIndex > 0) playVideo(videos[currentIndex - 1]);
+                    }
+                  }}
+                  onToggleSubtitles={() => setShowSubtitleModal(true)}
+                  selectedSubtitle={state.selectedSubtitle}
+                />
+                
+                {showSubtitleModal && <SubtitleSelector subtitles={state.subtitles} videoName={state.currentVideo?.name || ''} selectedSubtitle={state.selectedSubtitle} onSelect={handleSubtitleSelect} onClose={() => setShowSubtitleModal(false)} subtitleSettings={state.subtitleSettings} onUpdateSettings={(settings) => setState(prev => ({ ...prev, subtitleSettings: settings }))} />}
+              </div>
+
+              {/* Theater Mode Subtitles (Dedicated Bar) */}
+              {isTheaterMode && !isFullscreen && subtitleUrl && (
+                <div className="h-32 bg-[#050505] flex flex-col items-center justify-center shrink-0 border-t border-white/10 px-8 relative z-20">
+                  {activeCues.length > 0 ? (
+                    activeCues.map((text, i) => (
+                      <span 
+                        key={i} 
+                        className="px-2 text-center whitespace-pre-wrap leading-snug tracking-wide rounded-md"
+                        style={{
+                          fontSize: state.subtitleSettings.size,
+                          color: state.subtitleSettings.color,
+                          fontFamily: state.subtitleSettings.fontFamily,
+                          backgroundColor: state.subtitleSettings.backgroundColor === 'transparent' ? 'transparent' : undefined
+                        }}
+                        dangerouslySetInnerHTML={{ __html: text }}
+                      />
+                    ))
+                  ) : (
+                    <span className="text-white/0 select-none">-</span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Video Info Section - Visible in Default Mode */}
@@ -499,7 +615,6 @@ export default function VideoPlayer() {
         )}
       </main>
 
-      {showSubtitleModal && <SubtitleSelector subtitles={state.subtitles} videoName={state.currentVideo?.name || ''} selectedSubtitle={state.selectedSubtitle} onSelect={handleSubtitleSelect} onClose={() => setShowSubtitleModal(false)} subtitleSettings={state.subtitleSettings} onUpdateSettings={(settings) => setState(prev => ({ ...prev, subtitleSettings: settings }))} />}
       <ConfirmationModal isOpen={showConfirmClear} title="Clear All History?" message="This will remove all saved playback positions, watched status, and recently opened folders. This action cannot be undone." confirmText="Yes, Clear All" cancelText="Cancel" type="danger" onConfirm={confirmClearHistory} onCancel={() => setShowConfirmClear(false)} />
     </div>
   );

@@ -62,9 +62,9 @@ export default function Sidebar({
                <X size={14} />
             </button>
           </div>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <span className="text-sm font-medium text-foreground">Appearance</span>
+          <div className="space-y-5">
+            <div className="space-y-3">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">Appearance</span>
               <div className="flex bg-muted p-1 rounded-lg border border-border">
                 <button 
                   onClick={() => setTheme('light')}
@@ -84,22 +84,24 @@ export default function Sidebar({
             <div className="h-px bg-border" />
             
             <div className="space-y-2">
-              <span className="text-sm font-medium text-foreground">Data Management</span>
-              <button 
-                onClick={() => { onRemoveFolder(); setShowSettings(false); }}
-                className="flex items-center gap-3 w-full px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-xl transition-colors font-semibold"
-              >
-                <Trash2 size={16} />
-                Remove Folder
-              </button>
-              
-              <button 
-                onClick={() => { onClearHistory(); setShowSettings(false); }}
-                className="flex items-center gap-3 w-full px-3 py-2 text-sm text-amber-500 hover:bg-amber-500/10 rounded-xl transition-colors font-semibold"
-              >
-                <RotateCcw size={16} />
-                Clear History
-              </button>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">Data Management</span>
+              <div className="space-y-1">
+                <button 
+                  onClick={() => { onRemoveFolder(); setShowSettings(false); }}
+                  className="flex items-center gap-3 w-full px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-xl transition-colors font-semibold"
+                >
+                  <Trash2 size={16} />
+                  Remove Folder
+                </button>
+                
+                <button 
+                  onClick={() => { onClearHistory(); setShowSettings(false); }}
+                  className="flex items-center gap-3 w-full px-3 py-2 text-sm text-amber-500 hover:bg-amber-500/10 rounded-xl transition-colors font-semibold"
+                >
+                  <RotateCcw size={16} />
+                  Clear History
+                </button>
+              </div>
             </div>
           </div>
         </div>
