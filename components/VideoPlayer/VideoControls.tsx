@@ -48,6 +48,7 @@ export default function VideoControls({
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
   const togglePlay = useCallback(() => {
     if (!videoRef.current) return;
@@ -129,6 +130,19 @@ export default function VideoControls({
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  // Re-apply playback speed when a new video loads
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleLoadedMetadata = () => {
+      video.playbackRate = playbackSpeed;
+    };
+
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    return () => video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+  }, [playbackSpeed, videoRef, currentVideo]);
+
   return (
     <div 
       className={cn(
@@ -150,10 +164,12 @@ export default function VideoControls({
               <span className="text-sm font-medium">Playback Speed</span>
               <select 
                 className="bg-muted border border-border rounded px-2 py-1 text-xs outline-none text-foreground"
+                value={playbackSpeed}
                 onChange={(e) => {
-                  if (videoRef.current) videoRef.current.playbackRate = parseFloat(e.target.value);
+                  const val = parseFloat(e.target.value);
+                  setPlaybackSpeed(val);
+                  if (videoRef.current) videoRef.current.playbackRate = val;
                 }}
-                defaultValue="1"
               >
                 <option value="0.5">0.5x</option>
                 <option value="0.75">0.75x</option>

@@ -51,6 +51,7 @@ export default function VideoPlayer() {
   const [isResumable, setIsResumable] = useState<PlaybackState | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const trackRef = useRef<HTMLTrackElement>(null);
   const [showSubtitleModal, setShowSubtitleModal] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
   const [isTheaterMode, setIsTheaterMode] = useState(false);
@@ -122,6 +123,24 @@ export default function VideoPlayer() {
     const handlePlay = () => {
       setShowFloatingInfo(false);
       resetControlsTimer();
+
+      // Workaround for stuck captions when resuming play
+      if (video.textTracks && video.textTracks.length > 0) {
+        for (let i = 0; i < video.textTracks.length; i++) {
+          const track = video.textTracks[i];
+          if (trackRef.current && trackRef.current.track === track) {
+            track.mode = 'hidden';
+            track.mode = 'showing';
+          } else {
+            track.mode = 'hidden';
+            if (track.cues) {
+               try {
+                 Array.from(track.cues).forEach(cue => track.removeCue(cue));
+               } catch(e) {}
+            }
+          }
+        }
+      }
     };
     const handlePause = () => {
       triggerFloatingInfo(3000);
@@ -384,11 +403,21 @@ export default function VideoPlayer() {
                     videoRef.current.currentTime = pendingSeekTime.current;
                     pendingSeekTime.current = null;
                   }
+                  
+                  // Hide any ghost tracks that the browser didn't clean up
+                  if (videoRef.current && videoRef.current.textTracks) {
+                    const tracks = videoRef.current.textTracks;
+                    for (let i = 0; i < tracks.length; i++) {
+                      if (!trackRef.current || trackRef.current.track !== tracks[i]) {
+                        tracks[i].mode = 'hidden';
+                      }
+                    }
+                  }
                 }}
                 controls={false}
                 autoPlay
               >
-                {subtitleUrl && <track key={subtitleUrl} kind="subtitles" src={subtitleUrl} srcLang="en" label="English" default />}
+                {subtitleUrl && <track ref={trackRef} key={subtitleUrl} kind="subtitles" src={subtitleUrl} srcLang="en" label="English" default />}
               </video>
               
               <VideoControls 
