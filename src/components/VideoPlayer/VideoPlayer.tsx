@@ -31,6 +31,12 @@ export default function VideoPlayer() {
     isSidebarOpen: true,
     autoPlay: true,
     showWatched: true,
+    subtitleSettings: {
+      size: '1rem',
+      color: '#ffffff',
+      fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+      backgroundColor: 'rgba(0,0,0,0.5)'
+    },
   });
 
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -126,7 +132,9 @@ export default function VideoPlayer() {
 
   const handleOpenFolder = async () => {
     try {
-      const handle = await window.showDirectoryPicker();
+      // `showDirectoryPicker` is part of the File System Access API and may not
+      // be present in all TS libs; cast to `any` to avoid type errors during build.
+      const handle = await (window as any).showDirectoryPicker();
       await saveRootHandle(handle);
       const rootNode = await crawlDirectory(handle);
       setState(prev => ({ ...prev, rootHandle: handle, currentFolder: rootNode }));
@@ -161,7 +169,7 @@ export default function VideoPlayer() {
     try {
       const handle = await getRootHandle();
       if (!handle) { handleOpenFolder(); return; }
-      const permission = await handle.requestPermission({ mode: 'read' });
+      const permission = await (handle as any).requestPermission({ mode: 'read' });
       if (permission !== 'granted') { handleOpenFolder(); return; }
       const rootNode = await crawlDirectory(handle);
       setState(prev => ({ ...prev, rootHandle: handle, currentFolder: rootNode }));

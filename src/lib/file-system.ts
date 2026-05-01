@@ -17,7 +17,7 @@ export async function crawlDirectory(
     videoCount: 0,
   };
 
-  for await (const entry of directoryHandle.values()) {
+  for await (const entry of (directoryHandle as any).values()) {
     const entryPath = path ? `${path}/${entry.name}` : entry.name;
     
     if (entry.kind === 'directory') {
