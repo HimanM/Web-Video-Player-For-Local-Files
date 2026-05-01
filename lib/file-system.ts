@@ -1,4 +1,4 @@
-import { FolderNode, VideoFile, SubtitleFile } from "@/types";
+import { FolderNode, VideoFile, SubtitleFile, TraversalStrategy } from "@/types";
 import { getExtension } from "./utils";
 import { isWatched, getPlaybackPosition } from "./storage-utils";
 
@@ -65,15 +65,47 @@ export async function crawlDirectory(
   return node;
 }
 
-export function getAllVideos(node: FolderNode): VideoFile[] {
+export function getAllVideos(node: FolderNode, strategy: TraversalStrategy = 'files-first'): VideoFile[] {
   let videos: VideoFile[] = [];
-  for (const child of node.children) {
-    if ('children' in child) {
-      videos = [...videos, ...getAllVideos(child as FolderNode)];
-    } else if ('handle' in child && !('type' in child)) {
-      videos.push(child as VideoFile);
+
+  if (strategy === 'files-first') {
+    // 1. Files in current directory
+    for (const child of node.children) {
+      if ('handle' in child && !('type' in child) && !('children' in child)) {
+        videos.push(child as VideoFile);
+      }
+    }
+    // 2. Subdirectories recursively
+    for (const child of node.children) {
+      if ('children' in child) {
+        videos = [...videos, ...getAllVideos(child as FolderNode, strategy)];
+      }
+    }
+  } else if (strategy === 'folders-first') {
+    // 1. Subdirectories recursively
+    for (const child of node.children) {
+      if ('children' in child) {
+        videos = [...videos, ...getAllVideos(child as FolderNode, strategy)];
+      }
+    }
+    // 2. Files in current directory
+    for (const child of node.children) {
+      if ('handle' in child && !('type' in child) && !('children' in child)) {
+        videos.push(child as VideoFile);
+      }
+    }
+  } else if (strategy === 'alphabetical') {
+    // Sort all children alphabetically regardless of type
+    const sortedChildren = [...node.children].sort((a, b) => a.name.localeCompare(b.name));
+    for (const child of sortedChildren) {
+      if ('children' in child) {
+        videos = [...videos, ...getAllVideos(child as FolderNode, strategy)];
+      } else if ('handle' in child && !('type' in child) && !('children' in child)) {
+        videos.push(child as VideoFile);
+      }
     }
   }
+
   return videos;
 }
 

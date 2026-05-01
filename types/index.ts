@@ -39,6 +39,8 @@ export interface SubtitleSettings {
   backgroundColor: string;
 }
 
+export type TraversalStrategy = 'files-first' | 'folders-first' | 'alphabetical';
+
 export interface AppState {
   rootHandle: FileSystemDirectoryHandle | null;
   currentFolder: FolderNode | null;
@@ -49,4 +51,5 @@ export interface AppState {
   autoPlay: boolean;
   showWatched: boolean;
   subtitleSettings: SubtitleSettings;
+  traversalStrategy: TraversalStrategy;
 }

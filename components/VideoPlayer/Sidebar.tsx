@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FolderNode, VideoFile } from '@/types';
+import { FolderNode, VideoFile, TraversalStrategy } from '@/types';
 import { cn } from '@/lib/utils';
 import { 
   FolderOpen, 
@@ -28,6 +28,8 @@ interface SidebarProps {
   onToggle: () => void;
   onRemoveFolder: () => void;
   onClearHistory: () => void;
+  traversalStrategy: TraversalStrategy;
+  onUpdateStrategy: (strategy: TraversalStrategy) => void;
 }
 
 export default function Sidebar({ 
@@ -38,7 +40,9 @@ export default function Sidebar({
   onOpenFolder, 
   onToggle,
   onRemoveFolder,
-  onClearHistory
+  onClearHistory,
+  traversalStrategy,
+  onUpdateStrategy
 }: SidebarProps) {
   const [activeTab, setActiveTab] = useState<'folders' | 'playlist'>('folders');
   const [showSettings, setShowSettings] = useState(false);
@@ -81,6 +85,31 @@ export default function Sidebar({
               </div>
             </div>
             
+            <div className="h-px bg-border" />
+
+            <div className="space-y-3">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">Playback Order</span>
+              <div className="flex flex-col gap-1">
+                {[
+                  { id: 'files-first', label: 'Files First', desc: 'Play current folder files before subfolders' },
+                  { id: 'folders-first', label: 'Folders First', desc: 'Traverse subfolders before playing local files' },
+                  { id: 'alphabetical', label: 'Alphabetical', desc: 'Strict A-Z sorting across all files and folders' }
+                ].map((strat) => (
+                  <button 
+                    key={strat.id}
+                    onClick={() => onUpdateStrategy(strat.id as TraversalStrategy)}
+                    className={cn(
+                      "flex flex-col items-start px-3 py-2 rounded-lg text-left transition-colors border",
+                      traversalStrategy === strat.id ? "bg-primary/10 border-primary" : "bg-card border-transparent hover:bg-muted"
+                    )}
+                  >
+                    <span className={cn("text-xs font-bold", traversalStrategy === strat.id ? "text-primary" : "text-foreground")}>{strat.label}</span>
+                    <span className="text-[10px] text-muted-foreground">{strat.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="h-px bg-border" />
             
             <div className="space-y-2">

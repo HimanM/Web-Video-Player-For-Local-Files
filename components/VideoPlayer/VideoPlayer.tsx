@@ -36,7 +36,8 @@ export default function VideoPlayer() {
       color: '#ffffff',
       fontFamily: 'var(--font-sans)',
       backgroundColor: 'rgba(0, 0, 0, 0.75)'
-    }
+    },
+    traversalStrategy: 'files-first'
   });
 
   useEffect(() => {
@@ -370,7 +371,7 @@ export default function VideoPlayer() {
 
   const onVideoEnded = () => {
     if (state.autoPlay && state.currentFolder) {
-      const videos = getAllVideos(state.currentFolder);
+      const videos = getAllVideos(state.currentFolder, state.traversalStrategy);
       const currentIndex = videos.findIndex(v => v.path === state.currentVideo?.path);
       if (currentIndex !== -1 && currentIndex < videos.length - 1) {
         playVideo(videos[currentIndex + 1]);
@@ -391,6 +392,8 @@ export default function VideoPlayer() {
         onToggle={() => setState(prev => ({ ...prev, isSidebarOpen: !prev.isSidebarOpen }))}
         onRemoveFolder={handleRemoveFolder}
         onClearHistory={handleClearHistory}
+        traversalStrategy={state.traversalStrategy}
+        onUpdateStrategy={(strat) => setState(prev => ({ ...prev, traversalStrategy: strat }))}
       />
 
       <main className="flex-1 flex flex-col relative overflow-y-auto overflow-x-hidden custom-scrollbar bg-background">
@@ -522,7 +525,7 @@ export default function VideoPlayer() {
                   onNext={onVideoEnded}
                   onPrev={() => {
                     if (state.currentFolder) {
-                      const videos = getAllVideos(state.currentFolder);
+                      const videos = getAllVideos(state.currentFolder, state.traversalStrategy);
                       const currentIndex = videos.findIndex(v => v.path === state.currentVideo?.path);
                       if (currentIndex > 0) playVideo(videos[currentIndex - 1]);
                     }
